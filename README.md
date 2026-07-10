@@ -24,6 +24,16 @@ Solo genera notas para repos faveados nuevos (los ya presentes en
 `Recursos externos/` se saltean). Al generar notas nuevas: commit + push al repo
 del digital brain y reindexación GBrain.
 
+### Corrida de prueba acotada
+
+```bash
+./venv/bin/python sync_repos.py --limit 2
+```
+
+`--limit N` procesa como máximo N repos nuevos. Útil para validar la integración
+con OpenAI con costo mínimo antes de la primera corrida completa. Como es
+idempotente, una corrida posterior sin `--limit` retoma con el resto.
+
 ## Cron (ejemplo, diario 4am)
 
 ```

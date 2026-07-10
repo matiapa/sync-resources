@@ -1,3 +1,4 @@
+import argparse
 import sys
 from datetime import datetime
 from types import SimpleNamespace
@@ -13,10 +14,12 @@ from config import Config, ConfigError, load_config
 from runlog import RunStats, append_log, format_summary
 
 
-def process_repos(cfg: Config, repos, deps) -> RunStats:
+def process_repos(cfg: Config, repos, deps, limit=None) -> RunStats:
     stats = RunStats()
     resources_dir = cfg.resources_dir
     for repo in repos:
+        if limit is not None and stats.created >= limit:
+            break
         stats.seen += 1
         if deps.note_exists(resources_dir, repo.full_name):
             stats.skipped += 1
@@ -31,7 +34,18 @@ def process_repos(cfg: Config, repos, deps) -> RunStats:
     return stats
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Sincroniza repos faveados de GitHub a notas del digital brain."
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Procesar como máximo N repos nuevos (útil para una corrida de prueba).",
+    )
+    args = parser.parse_args(argv)
+
     load_dotenv()
     try:
         cfg = load_config()
@@ -48,7 +62,7 @@ def main() -> int:
     )
 
     repos = github_client.get_starred_repos()
-    stats = process_repos(cfg, repos, deps)
+    stats = process_repos(cfg, repos, deps, limit=args.limit)
 
     if stats.created > 0:
         try:

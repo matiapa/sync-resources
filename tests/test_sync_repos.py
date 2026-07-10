@@ -20,6 +20,22 @@ def _repo(full_name):
     return RepoInfo(full_name, owner, name, f"https://github.com/{full_name}", 1, "desc")
 
 
+def test_process_respects_limit(tmp_path):
+    cfg = _cfg(tmp_path)
+    written = []
+    deps = SimpleNamespace(
+        get_readme=lambda fn: "r",
+        summarize=lambda fn, text: Summary("s", "d"),
+        note_exists=lambda rd, fn: False,
+        write_note=lambda rd, repo, summary: written.append(repo.full_name),
+    )
+    repos = [_repo("a/1"), _repo("a/2"), _repo("a/3")]
+    stats = process_repos(cfg, repos, deps, limit=2)
+    assert stats.created == 2
+    assert written == ["a/1", "a/2"]
+    assert stats.seen == 2
+
+
 def test_process_skips_existing_and_creates_new(tmp_path):
     cfg = _cfg(tmp_path)
     written = []
