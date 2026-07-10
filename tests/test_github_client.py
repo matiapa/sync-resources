@@ -2,7 +2,7 @@ import base64
 import subprocess
 from types import SimpleNamespace
 
-import github_client as gh
+from sources.github import client as gh
 from models import RepoInfo
 
 

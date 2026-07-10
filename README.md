@@ -17,27 +17,29 @@ opcional y defensiva: si `gbrain` no está instalado, se omite con un warning.
 ## Uso
 
 ```bash
-./venv/bin/python sync_repos.py
+./venv/bin/python sync.py
 ```
 
-Solo genera notas para repos faveados nuevos (los ya presentes en
-`Recursos externos/` se saltean). Al generar notas nuevas: commit + push al repo
-del digital brain y reindexación GBrain.
+`sync.py` corre todas las fuentes registradas (por ahora, solo GitHub). Usá
+`--source github` para acotar la corrida a una fuente puntual. Solo genera
+notas para repos faveados nuevos (los ya presentes en `Recursos/Repositorios/`
+se saltean). Al generar notas nuevas: commit + push al repo del digital brain y
+reindexación GBrain.
 
 ### Corrida de prueba acotada
 
 ```bash
-./venv/bin/python sync_repos.py --limit 2
+./venv/bin/python sync.py --source github --limit 2
 ```
 
-`--limit N` procesa como máximo N repos nuevos. Útil para validar la integración
-con OpenAI con costo mínimo antes de la primera corrida completa. Como es
-idempotente, una corrida posterior sin `--limit` retoma con el resto.
+`--limit N` procesa como máximo N items nuevos por fuente. Útil para validar la
+integración con OpenAI con costo mínimo antes de la primera corrida completa.
+Como es idempotente, una corrida posterior sin `--limit` retoma con el resto.
 
 ## Cron (ejemplo, diario 4am)
 
 ```
-0 4 * * * cd /home/matiapa/Applications/sync-resources && ./venv/bin/python sync_repos.py >> sync.log 2>&1
+0 4 * * * cd /home/matiapa/Applications/sync-resources && ./venv/bin/python sync.py >> sync.log 2>&1
 ```
 
 ## Logfile
