@@ -1,6 +1,18 @@
+import json
 from pathlib import Path
 
 from models import RepoInfo, Summary
+
+
+def _yaml_scalar(value: str) -> str:
+    """Emit a value as a YAML-safe double-quoted scalar.
+
+    The description comes from an LLM and may contain ``: ``, quotes or
+    newlines, any of which break an unquoted YAML scalar. A JSON string is a
+    valid YAML double-quoted flow scalar, so json.dumps gives correct escaping.
+    ``ensure_ascii=False`` keeps Spanish accents readable in the file.
+    """
+    return json.dumps(value, ensure_ascii=False)
 
 
 def note_filename(full_name: str) -> str:
@@ -19,7 +31,7 @@ def render_note(repo: RepoInfo, summary: Summary) -> str:
         "type: Recurso\n"
         "subtype: Repositorio\n"
         "source: GitHub\n"
-        f"description: {summary.description}\n"
+        f"description: {_yaml_scalar(summary.description)}\n"
         "---\n"
         "\n"
         f"# {repo.full_name}\n"
