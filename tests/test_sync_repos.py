@@ -37,6 +37,26 @@ def test_process_respects_limit(tmp_path):
     assert stats.tokens == 20
 
 
+def test_process_uses_progress_wrapper(tmp_path):
+    cfg = _cfg(tmp_path)
+    wrapped = []
+
+    def progress(iterable):
+        for item in iterable:
+            wrapped.append(item.full_name)
+            yield item
+
+    deps = SimpleNamespace(
+        get_readme=lambda fn: "r",
+        summarize=lambda fn, text: (Summary("s", "d"), 1),
+        note_exists=lambda rd, fn: False,
+        write_note=lambda rd, repo, summary: None,
+    )
+    stats = process_repos(cfg, [_repo("a/1"), _repo("a/2")], deps, progress=progress)
+    assert stats.created == 2
+    assert wrapped == ["a/1", "a/2"]
+
+
 def test_process_skips_existing_and_creates_new(tmp_path):
     cfg = _cfg(tmp_path)
     written = []

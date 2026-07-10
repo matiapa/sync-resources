@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from dotenv import load_dotenv
 from openai import OpenAI
+from tqdm import tqdm
 
 import downstream
 import github_client
@@ -14,10 +15,11 @@ from config import Config, ConfigError, load_config
 from runlog import RunStats, append_log, format_summary
 
 
-def process_repos(cfg: Config, repos, deps, limit=None) -> RunStats:
+def process_repos(cfg: Config, repos, deps, limit=None, progress=None) -> RunStats:
     stats = RunStats()
     resources_dir = cfg.resources_dir
-    for repo in repos:
+    iterable = repos if progress is None else progress(repos)
+    for repo in iterable:
         if limit is not None and stats.created >= limit:
             break
         stats.seen += 1
@@ -63,7 +65,9 @@ def main(argv=None) -> int:
     )
 
     repos = github_client.get_starred_repos()
-    stats = process_repos(cfg, repos, deps, limit=args.limit)
+    # disable=None desactiva la barra en no-TTY (ej. cron), evitando ensuciar sync.log.
+    progress = lambda it: tqdm(it, desc="Sincronizando repos", unit="repo", disable=None)
+    stats = process_repos(cfg, repos, deps, limit=args.limit, progress=progress)
 
     if stats.created > 0:
         try:
