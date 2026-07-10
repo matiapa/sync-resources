@@ -60,3 +60,24 @@ def test_summarize_tokens_zero_when_usage_missing():
     client, _ = _client_returning(content, usage=None)
     _, tokens = summarize("a/b", "texto", model="gpt-5.5", client=client)
     assert tokens == 0
+
+
+def test_describe_returns_sentence_and_tokens():
+    class FakeResp:
+        class choices0:
+            class message:
+                content = '{"description": "Una frase corta."}'
+        choices = [choices0]
+        usage = type("U", (), {"total_tokens": 12})()
+
+    class FakeClient:
+        class chat:
+            class completions:
+                @staticmethod
+                def create(**kwargs):
+                    return FakeResp()
+
+    from summarizer import describe
+    frase, tokens = describe("texto del tweet", "gpt-5.5", FakeClient())
+    assert frase == "Una frase corta."
+    assert tokens == 12

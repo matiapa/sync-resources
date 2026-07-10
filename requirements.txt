@@ -3,3 +3,4 @@ python-dotenv>=1.0
 tqdm>=4.66
 pytest>=8.0
 pyyaml>=6.0
+requests>=2.31
