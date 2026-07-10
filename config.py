@@ -27,6 +27,10 @@ class Config:
     gbrain_sync: bool
     script_dir: Path
     log_path: Path
+    x_client_id: str | None = None
+    x_client_secret: str | None = None
+    x_subdir: str = "Recursos/Posts"
+    x_token_path: Path | None = None
 
 
 def load_config(
@@ -53,4 +57,8 @@ def load_config(
         gbrain_sync=_as_bool(env.get("GBRAIN_SYNC"), True),
         script_dir=script_dir,
         log_path=script_dir / "sync.log",
+        x_client_id=env.get("X_CLIENT_ID"),
+        x_client_secret=env.get("X_CLIENT_SECRET"),
+        x_subdir=env.get("X_SUBDIR", "Recursos/Posts"),
+        x_token_path=Path(env["X_TOKEN_PATH"]) if env.get("X_TOKEN_PATH") else script_dir / ".x_token.json",
     )
