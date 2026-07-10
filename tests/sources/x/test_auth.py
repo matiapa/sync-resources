@@ -75,3 +75,70 @@ def test_exchange_code_raises_on_error():
 
     with pytest.raises(auth.AuthError):
         auth.exchange_code("cid", "sec", "bad", "v", "http://127.0.0.1:8723/callback", post=fake_post)
+
+
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from sources.x.auth import TokenStore, save_token_response, get_valid_access_token, AuthError
+
+
+def _store(tmp_path) -> TokenStore:
+    return TokenStore(tmp_path / ".x_token.json")
+
+
+def test_store_load_missing_returns_empty(tmp_path):
+    assert _store(tmp_path).load() == {}
+
+
+def test_save_token_response_normalizes_and_persists(tmp_path):
+    store = _store(tmp_path)
+    now = datetime(2026, 7, 10, 12, 0, 0)
+    data = save_token_response(store,
+        {"access_token": "at", "refresh_token": "rt", "expires_in": 7200},
+        user_id="u1", now=lambda: now)
+    assert data["access_token"] == "at"
+    assert data["refresh_token"] == "rt"
+    assert data["user_id"] == "u1"
+    assert data["expires_at"] == (now + timedelta(seconds=7200)).isoformat()
+    # persistido en disco
+    assert json.loads(Path(store.path).read_text())["access_token"] == "at"
+
+
+def test_get_valid_access_token_returns_current_when_fresh(tmp_path):
+    store = _store(tmp_path)
+    future = (datetime(2026, 7, 10, 12, 0, 0) + timedelta(hours=1)).isoformat()
+    store.save({"access_token": "fresh", "refresh_token": "rt", "expires_at": future, "user_id": "u1"})
+
+    def fail_post(*a, **k):
+        raise AssertionError("no debería refrescar")
+
+    tok = get_valid_access_token(store, "cid", "sec",
+        now=lambda: datetime(2026, 7, 10, 12, 0, 0), post=fail_post)
+    assert tok == "fresh"
+
+
+def test_get_valid_access_token_refreshes_and_rotates(tmp_path):
+    store = _store(tmp_path)
+    past = (datetime(2026, 7, 10, 12, 0, 0) - timedelta(minutes=1)).isoformat()
+    store.save({"access_token": "old", "refresh_token": "old-rt", "expires_at": past, "user_id": "u1"})
+
+    def fake_post(url, data=None, auth=None, headers=None, timeout=None):
+        from types import SimpleNamespace
+        return SimpleNamespace(status_code=200, ok=True, text="",
+            json=lambda: {"access_token": "new", "refresh_token": "new-rt", "expires_in": 7200})
+
+    tok = get_valid_access_token(store, "cid", "sec",
+        now=lambda: datetime(2026, 7, 10, 12, 0, 0), post=fake_post)
+    assert tok == "new"
+    saved = store.load()
+    assert saved["refresh_token"] == "new-rt"   # rotación persistida
+    assert saved["user_id"] == "u1"             # user_id conservado
+
+
+def test_get_valid_access_token_without_refresh_token_raises(tmp_path):
+    store = _store(tmp_path)  # vacío
+    with pytest.raises(AuthError):
+        get_valid_access_token(store, "cid", "sec",
+            now=lambda: datetime(2026, 7, 10, 12, 0, 0), post=lambda *a, **k: None)
