@@ -33,20 +33,30 @@ def test_parse_response_missing_key_raises():
         parse_response('{"summary": "solo esto"}')
 
 
-def test_summarize_calls_client_and_parses():
-    captured = {}
-
+def _client_returning(content, usage=None):
     def create(**kwargs):
-        captured.update(kwargs)
-        content = json.dumps({"summary": "resumen", "description": "frase"})
+        create.captured = kwargs
         message = SimpleNamespace(content=content)
-        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=usage)
 
-    client = SimpleNamespace(
+    return SimpleNamespace(
         chat=SimpleNamespace(completions=SimpleNamespace(create=create))
-    )
-    s = summarize("a/b", "texto", model="gpt-5.5", client=client)
-    assert s.summary == "resumen"
-    assert s.description == "frase"
-    assert captured["model"] == "gpt-5.5"
-    assert captured["response_format"] == {"type": "json_object"}
+    ), create
+
+
+def test_summarize_calls_client_and_returns_summary_and_tokens():
+    content = json.dumps({"summary": "resumen", "description": "frase"})
+    client, create = _client_returning(content, usage=SimpleNamespace(total_tokens=123))
+    summary, tokens = summarize("a/b", "texto", model="gpt-5.5", client=client)
+    assert summary.summary == "resumen"
+    assert summary.description == "frase"
+    assert tokens == 123
+    assert create.captured["model"] == "gpt-5.5"
+    assert create.captured["response_format"] == {"type": "json_object"}
+
+
+def test_summarize_tokens_zero_when_usage_missing():
+    content = json.dumps({"summary": "r", "description": "d"})
+    client, _ = _client_returning(content, usage=None)
+    _, tokens = summarize("a/b", "texto", model="gpt-5.5", client=client)
+    assert tokens == 0

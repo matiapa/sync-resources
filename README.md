@@ -43,5 +43,9 @@ idempotente, una corrida posterior sin `--limit` retoma con el resto.
 ## Logfile
 
 Cada corrida agrega una línea de resumen a `sync.log` (fecha, resultado,
-métricas y detalle de errores). Este archivo queda en esta carpeta y no se copia
-al digital brain.
+métricas, tokens de OpenAI consumidos y detalle de errores). Este archivo queda
+en esta carpeta y no se copia al digital brain. Ejemplo:
+
+```
+[2026-07-10T04:00:00] OK vistos=223 nuevos=2 salteados=221 errores=0 tokens=3480
+```

@@ -8,6 +8,7 @@ class RunStats:
     seen: int = 0
     created: int = 0
     skipped: int = 0
+    tokens: int = 0
     errors: list[tuple[str, str]] = field(default_factory=list)
     git_ok: bool | None = None
     gbrain_ok: bool | None = None
@@ -25,7 +26,8 @@ def format_summary(stats: RunStats, now: datetime) -> str:
     line = (
         f"[{now.isoformat()}] {stats.result} "
         f"vistos={stats.seen} nuevos={stats.created} "
-        f"salteados={stats.skipped} errores={len(stats.errors)}"
+        f"salteados={stats.skipped} errores={len(stats.errors)} "
+        f"tokens={stats.tokens}"
     )
     lines = [line]
     for full_name, reason in stats.errors:

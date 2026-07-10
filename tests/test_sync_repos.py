@@ -25,7 +25,7 @@ def test_process_respects_limit(tmp_path):
     written = []
     deps = SimpleNamespace(
         get_readme=lambda fn: "r",
-        summarize=lambda fn, text: Summary("s", "d"),
+        summarize=lambda fn, text: (Summary("s", "d"), 10),
         note_exists=lambda rd, fn: False,
         write_note=lambda rd, repo, summary: written.append(repo.full_name),
     )
@@ -34,6 +34,7 @@ def test_process_respects_limit(tmp_path):
     assert stats.created == 2
     assert written == ["a/1", "a/2"]
     assert stats.seen == 2
+    assert stats.tokens == 20
 
 
 def test_process_skips_existing_and_creates_new(tmp_path):
@@ -42,7 +43,7 @@ def test_process_skips_existing_and_creates_new(tmp_path):
     existing = {"a/old"}
     deps = SimpleNamespace(
         get_readme=lambda fn: "readme de " + fn,
-        summarize=lambda fn, text: Summary("sum " + fn, "desc " + fn),
+        summarize=lambda fn, text: (Summary("sum " + fn, "desc " + fn), 7),
         note_exists=lambda rd, fn: fn in existing,
         write_note=lambda rd, repo, summary: written.append(repo.full_name),
     )
@@ -52,6 +53,7 @@ def test_process_skips_existing_and_creates_new(tmp_path):
     assert stats.created == 1
     assert written == ["a/new"]
     assert stats.errors == []
+    assert stats.tokens == 7
 
 
 def test_process_records_error_and_continues(tmp_path):
@@ -77,7 +79,7 @@ def test_process_fallback_to_description_when_no_readme(tmp_path):
 
     def fake_summarize(fn, text):
         seen_text[fn] = text
-        return Summary("s", "d")
+        return Summary("s", "d"), 0
 
     deps = SimpleNamespace(
         get_readme=lambda fn: None,

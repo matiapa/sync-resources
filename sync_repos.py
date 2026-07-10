@@ -26,8 +26,9 @@ def process_repos(cfg: Config, repos, deps, limit=None) -> RunStats:
             continue
         try:
             text = deps.get_readme(repo.full_name) or repo.description or repo.full_name
-            summary = deps.summarize(repo.full_name, text)
+            summary, tokens = deps.summarize(repo.full_name, text)
             deps.write_note(resources_dir, repo, summary)
+            stats.tokens += tokens
             stats.created += 1
         except Exception as exc:  # noqa: BLE001 - se loguea y se sigue
             stats.errors.append((repo.full_name, str(exc)))

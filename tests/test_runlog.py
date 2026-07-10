@@ -20,7 +20,8 @@ def test_result_fallo_on_git_failure():
 
 
 def test_format_summary_contains_metrics_and_errors():
-    s = RunStats(seen=3, created=1, skipped=1, errors=[("x/y", "timeout")], git_ok=True)
+    s = RunStats(seen=3, created=1, skipped=1, errors=[("x/y", "timeout")],
+                 git_ok=True, tokens=456)
     now = datetime(2026, 7, 10, 4, 0, 0)
     text = format_summary(s, now)
     assert "2026-07-10T04:00:00" in text
@@ -29,6 +30,7 @@ def test_format_summary_contains_metrics_and_errors():
     assert "nuevos=1" in text
     assert "salteados=1" in text
     assert "errores=1" in text
+    assert "tokens=456" in text
     assert "  - x/y: timeout" in text
     assert text.endswith("\n")
 

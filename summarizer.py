@@ -44,10 +44,13 @@ def parse_response(content: str) -> Summary:
     return Summary(summary=str(obj["summary"]), description=str(obj["description"]))
 
 
-def summarize(full_name: str, text: str, model: str, client) -> Summary:
+def summarize(full_name: str, text: str, model: str, client) -> tuple[Summary, int]:
     response = client.chat.completions.create(
         model=model,
         messages=build_messages(full_name, text),
         response_format={"type": "json_object"},
     )
-    return parse_response(response.choices[0].message.content)
+    summary = parse_response(response.choices[0].message.content)
+    usage = getattr(response, "usage", None)
+    tokens = getattr(usage, "total_tokens", 0) or 0
+    return summary, tokens
