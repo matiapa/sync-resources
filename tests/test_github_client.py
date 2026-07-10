@@ -14,10 +14,10 @@ def test_get_starred_repos_parses_jsonl():
     jsonl = (
         '{"full_name":"pallets/flask","owner":"pallets","name":"flask",'
         '"html_url":"https://github.com/pallets/flask","stars":67000,'
-        '"description":"micro"}\n'
+        '"description":"micro","pushed_at":"2026-06-01T12:00:00Z"}\n'
         '{"full_name":"psf/requests","owner":"psf","name":"requests",'
         '"html_url":"https://github.com/psf/requests","stars":52000,'
-        '"description":null}\n'
+        '"description":null,"pushed_at":null}\n'
         "\n"
     )
     calls = []
@@ -29,9 +29,10 @@ def test_get_starred_repos_parses_jsonl():
     repos = gh.get_starred_repos(run=fake_run)
     assert repos == [
         RepoInfo("pallets/flask", "pallets", "flask",
-                 "https://github.com/pallets/flask", 67000, "micro"),
+                 "https://github.com/pallets/flask", 67000, "micro",
+                 "2026-06-01T12:00:00Z"),
         RepoInfo("psf/requests", "psf", "requests",
-                 "https://github.com/psf/requests", 52000, None),
+                 "https://github.com/psf/requests", 52000, None, None),
     ]
     assert calls[0][:3] == ["gh", "api", "user/starred"]
     assert "--paginate" in calls[0]

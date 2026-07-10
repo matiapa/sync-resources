@@ -11,7 +11,8 @@ GH_JQ = (
     "name: .name, "
     "html_url: .html_url, "
     "stars: .stargazers_count, "
-    "description: .description"
+    "description: .description, "
+    "pushed_at: .pushed_at"
     "}"
 )
 
@@ -37,6 +38,7 @@ def get_starred_repos(run=subprocess.run) -> list[RepoInfo]:
                 html_url=obj["html_url"],
                 stars=obj["stars"],
                 description=obj.get("description"),
+                pushed_at=obj.get("pushed_at"),
             )
         )
     return repos

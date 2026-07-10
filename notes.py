@@ -23,6 +23,19 @@ def note_exists(resources_dir: Path, full_name: str) -> bool:
     return (resources_dir / note_filename(full_name)).exists()
 
 
+def _last_update(pushed_at: str | None) -> str:
+    """Fecha (YYYY-MM-DD) del último push, o 'desconocida'.
+
+    Se guarda la fecha absoluta (no un 'hace X meses') porque la nota se
+    escribe una sola vez y nunca se actualiza: un valor relativo quedaría
+    congelado y engañoso. El lector puede computar la antigüedad al momento
+    de leer.
+    """
+    if not pushed_at:
+        return "desconocida"
+    return pushed_at[:10]
+
+
 def render_note(repo: RepoInfo, summary: Summary) -> str:
     return (
         "---\n"
@@ -41,6 +54,7 @@ def render_note(repo: RepoInfo, summary: Summary) -> str:
         "## Metadatos\n"
         f"- **Autor:** [{repo.owner}](https://github.com/{repo.owner})\n"
         f"- **Estrellas:** {repo.stars}\n"
+        f"- **Última actualización:** {_last_update(repo.pushed_at)}\n"
         f"- **Repo:** {repo.html_url}\n"
     )
 

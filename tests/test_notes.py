@@ -13,6 +13,7 @@ REPO = RepoInfo(
     html_url="https://github.com/pallets/flask",
     stars=67000,
     description="The Python micro framework.",
+    pushed_at="2026-06-01T12:00:00Z",
 )
 SUMMARY = Summary(
     summary="Flask es un micro-framework web para Python.",
@@ -36,8 +37,15 @@ def test_render_note_has_frontmatter_and_body():
     assert "Flask es un micro-framework web para Python." in md
     assert "[pallets](https://github.com/pallets)" in md
     assert "**Estrellas:** 67000" in md
+    assert "**Última actualización:** 2026-06-01" in md
     assert "https://github.com/pallets/flask" in md
     assert md.endswith("\n")
+
+
+def test_render_note_unknown_last_update():
+    repo = RepoInfo("a/b", "a", "b", "https://github.com/a/b", 1, "d", pushed_at=None)
+    md = render_note(repo, SUMMARY)
+    assert "**Última actualización:** desconocida" in md
 
 
 def test_description_with_colon_stays_valid_yaml():

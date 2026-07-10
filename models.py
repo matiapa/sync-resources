@@ -9,6 +9,7 @@ class RepoInfo:
     html_url: str
     stars: int
     description: str | None
+    pushed_at: str | None = None   # ISO8601 del último push (señal de actividad)
 
 
 @dataclass(frozen=True)
