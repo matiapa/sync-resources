@@ -79,8 +79,7 @@ Una corrida del script ejecuta:
    - Reindexar en GBrain (`gbrain import`/sync). Toggle `GBRAIN_SYNC`. **Llamada
      defensiva:** si `gbrain` no está en el PATH, loguea warning y no falla la
      corrida.
-7. **Logging** a un archivo en el directorio del script, para diagnóstico del
-   cron.
+7. **Logging** a un archivo en el directorio del script (ver sección Logging).
 
 ## Formato de nota
 
@@ -122,6 +121,24 @@ Para que el spec de frontmatter quede consistente con el nuevo tipo de nota:
    campos ad-hoc que dupliquen esta función — cualquier clasificación adicional
    es un tag más, nunca un campo nuevo"*. Hay que ajustar esa regla para
    admitir `subtype` como sub-clasificación válida dentro de `type`.
+
+## Logging
+
+El script mantiene un **logfile de corridas** en el directorio del script (ej.
+`sync.log`), que **queda en esta carpeta y nunca se copia al digital brain**.
+Ya está gitignored (`*.log`).
+
+Cada corrida escribe al menos una **entrada de resumen** con:
+
+- **Fecha/hora** de la corrida (timestamp).
+- **Resultado global:** OK / OK con errores parciales / FALLO.
+- **Métricas:** cantidad de repos faveados vistos, notas nuevas generadas,
+  repos salteados (ya existentes) y repos con error.
+- **Detalle de fallos:** qué repo falló y por qué (README ausente, error de
+  API, etc.), y si el commit/push/gbrain sync salieron bien.
+
+Formato pensado para inspección humana rápida (una línea de resumen por corrida
++ líneas de detalle para errores). El logfile es append-only entre corridas.
 
 ## Configuración (`.env`)
 
