@@ -314,6 +314,24 @@ automáticamente). Ejemplo (diario a las 4am):
 0 4 * * * cd /home/matiapa/Applications/sync-resources && ./venv/bin/python sync.py >> sync.log 2>&1
 ```
 
+## Plan de implementación (dos etapas)
+
+Este diseño se implementa en **dos planes separados**, para introducir el
+refactor con la red de tests puesta antes de sumar la complejidad de la fuente
+nueva:
+
+- **Plan 1 — Refactor a `Source`:** introducir `sources/base.py` (`Source`,
+  `RenderedNote`), el driver genérico `pipeline.py`, el entrypoint `sync.py`, y
+  re-expresar la fuente GitHub existente como `sources/github/source.py` **sin
+  cambiar su comportamiento**. Config por-fuente (`GITHUB_SUBDIR`). Los tests
+  existentes de GitHub deben seguir verdes; `sync.py --source github` produce
+  exactamente las mismas notas que `sync_repos.py`.
+- **Plan 2 — Fuente X:** sobre la abstracción ya estable, agregar
+  `sources/x/{auth,client,source}.py`, el subcomando `sync.py auth x`, la config
+  de X, el render de nota de post, y los cambios al `CLAUDE.md` del brain.
+
+Cada plan se escribe y ejecuta por separado (spec → plan → implementación).
+
 ## Criterios de éxito
 
 - `sync.py auth x` completa el flujo OAuth y deja un `.x_token.json` válido con
