@@ -1,7 +1,7 @@
-import github_client
 import notes
 import summarizer
 from sources.base import RenderedNote
+from sources.github import client as github_client
 
 
 class GitHubSource:
