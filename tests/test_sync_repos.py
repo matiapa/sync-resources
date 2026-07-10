@@ -9,7 +9,7 @@ from sync_repos import process_repos
 def _cfg(tmp_path: Path) -> Config:
     return Config(
         openai_api_key="k", openai_model="gpt-5.5",
-        digital_brain_path=tmp_path, resources_subdir="res",
+        digital_brain_path=tmp_path, github_subdir="res",
         git_push=True, gbrain_sync=True,
         script_dir=tmp_path, log_path=tmp_path / "sync.log",
     )

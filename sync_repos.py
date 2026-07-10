@@ -17,7 +17,7 @@ from runlog import RunStats, append_log, format_summary
 
 def process_repos(cfg: Config, repos, deps, limit=None, progress=None) -> RunStats:
     stats = RunStats()
-    resources_dir = cfg.resources_dir
+    resources_dir = cfg.digital_brain_path / cfg.github_subdir
     iterable = repos if progress is None else progress(repos)
     for repo in iterable:
         if limit is not None and stats.created >= limit:
@@ -73,7 +73,7 @@ def main(argv=None) -> int:
         try:
             downstream.git_commit_push(
                 cfg.digital_brain_path,
-                cfg.resources_subdir,
+                cfg.github_subdir,
                 f"chore: sync {stats.created} repos faveados nuevos",
                 push=cfg.git_push,
             )
