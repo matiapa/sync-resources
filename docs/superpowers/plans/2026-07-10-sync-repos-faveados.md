@@ -1162,71 +1162,9 @@ git commit -m "feat: orchestrator wiring all modules + README"
 
 ---
 
-### Task 8: Actualizar el `CLAUDE.md` del digital brain
-
-Este task edita y commitea en el repo del **digital brain**
-(`/home/matiapa/digital-brain`), no en `sync-resources`. Alinea el spec de
-frontmatter con el nuevo tipo de nota.
-
-**Files:**
-- Modify: `/home/matiapa/digital-brain/CLAUDE.md`
-
-- [ ] **Step 1: Releer el `CLAUDE.md` actual**
-
-Run: `cat /home/matiapa/digital-brain/CLAUDE.md`
-Confirmar que las secciones a editar existen tal cual (pueden haber cambiado desde que se escribió el plan).
-
-- [ ] **Step 2: Agregar `Recurso` al vocabulario de `type`**
-
-En la sección `### \`type\``, agregar `Recurso` a la lista cerrada. Cambiar:
-```
-`Plan`, `Conferencia`, `Relevamiento`.
-```
-por:
-```
-`Plan`, `Conferencia`, `Relevamiento`, `Recurso`.
-```
-
-- [ ] **Step 3: Agregar `GitHub` al vocabulario de `source`**
-
-En la sección `### \`source\``, cambiar:
-```
-Vocabulario cerrado: `Keep`, `Notion`, `YouTube`.
-```
-por:
-```
-Vocabulario cerrado: `Keep`, `Notion`, `YouTube`, `GitHub`.
-```
-
-- [ ] **Step 4: Enmendar la regla de "no campos ad-hoc" y documentar `subtype`**
-
-En la sección `tags`, cambiar la frase:
-```
-No crear campos ad-hoc que dupliquen esta función — cualquier clasificación adicional es un tag más, nunca un campo nuevo.
-```
-por:
-```
-No crear campos ad-hoc que dupliquen esta función — cualquier clasificación adicional es un tag más, salvo el campo reservado `subtype` (ver abajo), que sub-clasifica dentro de `type`.
-```
-
-Y agregar, después de la sección `### \`type\``, una nueva sección:
-```
-### `subtype` (opcional, scalar)
-
-Sub-clasificación dentro de `type`, para distinguir variantes de un mismo tipo.
-Valor definido: `Repositorio` (repos de GitHub sincronizados automáticamente,
-con `type: Recurso`). Vocabulario extensible a medida que aparezcan nuevos
-subtipos.
-```
-
-- [ ] **Step 5: Commit en el repo del digital brain**
-
-```bash
-git -C /home/matiapa/digital-brain add CLAUDE.md
-git -C /home/matiapa/digital-brain commit -m "docs: add Recurso type, GitHub source, and subtype field to frontmatter spec"
-```
-
-(El push de este cambio queda a criterio del usuario o del propio script en su primera corrida, que commitea la carpeta de recursos por separado.)
+> **Nota:** La actualización del `CLAUDE.md` del digital brain (agregar `Recurso`
+> a `type`, `GitHub` a `source`, y el campo `subtype: Repositorio`) la realiza el
+> usuario a mano; queda fuera del alcance de este plan.
 
 ---
 
