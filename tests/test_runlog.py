@@ -35,6 +35,17 @@ def test_format_summary_contains_metrics_and_errors():
     assert text.endswith("\n")
 
 
+def test_format_summary_contains_deleted_count_and_detail():
+    s = RunStats(seen=4, created=0, skipped=2, deleted=2,
+                 deleted_items=["owner-repo-viejo", "owner-otro-repo"],
+                 git_ok=True)
+    now = datetime(2026, 7, 11, 4, 0, 0)
+    text = format_summary(s, now)
+    assert "borrados=2" in text
+    assert "  - borrado: owner-repo-viejo" in text
+    assert "  - borrado: owner-otro-repo" in text
+
+
 def test_append_log(tmp_path: Path):
     log = tmp_path / "sync.log"
     append_log(log, "linea1\n")
