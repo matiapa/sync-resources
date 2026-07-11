@@ -33,7 +33,12 @@ class FakeSource:
     def render(self, item):
         if self.render_error is not None:
             raise RuntimeError(self.render_error)
-        return RenderedNote(text=f"cuerpo de {item}", tokens=self.tokens)
+        text = f"---\nsource: {self.name}\n---\n\ncuerpo de {item}\n"
+        return RenderedNote(text=text, tokens=self.tokens)
+
+
+def _owned_note(name: str, body: str) -> str:
+    return f"---\nsource: {name}\n---\n\n{body}\n"
 
 
 def test_creates_notes_for_new_items(tmp_path):
@@ -44,7 +49,9 @@ def test_creates_notes_for_new_items(tmp_path):
     assert stats.created == 2
     assert stats.skipped == 0
     assert stats.tokens == 6
-    assert (tmp_path / "res" / "a.md").read_text(encoding="utf-8") == "cuerpo de a"
+    assert (tmp_path / "res" / "a.md").read_text(encoding="utf-8") == (
+        "---\nsource: Fake\n---\n\ncuerpo de a\n"
+    )
     assert (tmp_path / "res" / "b.md").exists()
 
 
@@ -91,3 +98,70 @@ def test_records_error_and_continues(tmp_path):
     assert stats.created == 0
     assert stats.errors == [("a", "openai caído")]
     assert not (tmp_path / "res" / "a.md").exists()
+
+
+def test_deletes_notes_for_items_no_longer_fetched(tmp_path):
+    cfg = _cfg(tmp_path)
+    res = tmp_path / "res"
+    res.mkdir()
+    (res / "a.md").write_text(_owned_note("Fake", "cuerpo de a"), encoding="utf-8")
+    (res / "b.md").write_text(_owned_note("Fake", "cuerpo de b"), encoding="utf-8")
+    src = FakeSource(items=["a"])  # "b" ya no está faveado
+    stats = process_source(cfg, src)
+    assert stats.deleted == 1
+    assert stats.deleted_items == ["b"]
+    assert (res / "a.md").exists()
+    assert not (res / "b.md").exists()
+
+
+def test_does_not_delete_note_without_matching_source_frontmatter(tmp_path):
+    cfg = _cfg(tmp_path)
+    res = tmp_path / "res"
+    res.mkdir()
+    (res / "manual.md").write_text("# Nota agregada a mano\n", encoding="utf-8")
+    src = FakeSource(items=[])
+    stats = process_source(cfg, src)
+    assert stats.deleted == 0
+    assert (res / "manual.md").exists()
+
+
+def test_aborts_deletion_when_stale_ratio_exceeds_threshold(tmp_path):
+    cfg = _cfg(tmp_path)
+    res = tmp_path / "res"
+    res.mkdir()
+    stems = [f"item{i}" for i in range(5)]
+    for stem in stems:
+        (res / f"{stem}.md").write_text(_owned_note("Fake", stem), encoding="utf-8")
+    src = FakeSource(items=[])  # fetch vacío: borraría el 100%
+    stats = process_source(cfg, src)
+    assert stats.deleted == 0
+    assert stats.deleted_items == []
+    assert len(stats.errors) == 1
+    assert "borrado abortado" in stats.errors[0][1]
+    for stem in stems:
+        assert (res / f"{stem}.md").exists()
+
+
+def test_deletion_below_threshold_floor_is_not_blocked(tmp_path):
+    cfg = _cfg(tmp_path)
+    res = tmp_path / "res"
+    res.mkdir()
+    (res / "a.md").write_text(_owned_note("Fake", "a"), encoding="utf-8")
+    (res / "b.md").write_text(_owned_note("Fake", "b"), encoding="utf-8")
+    src = FakeSource(items=[])  # borra 2/2 (100%), pero por debajo del piso de 5
+    stats = process_source(cfg, src)
+    assert stats.deleted == 2
+    assert not (res / "a.md").exists()
+    assert not (res / "b.md").exists()
+
+
+def test_deletion_uses_full_fetch_ignoring_limit(tmp_path):
+    cfg = _cfg(tmp_path)
+    res = tmp_path / "res"
+    res.mkdir()
+    (res / "c.md").write_text(_owned_note("Fake", "c"), encoding="utf-8")
+    src = FakeSource(items=["a", "b"])  # "c" ya no está, aunque --limit corte la creación
+    stats = process_source(cfg, src, limit=1)
+    assert stats.created == 1
+    assert stats.deleted == 1
+    assert not (res / "c.md").exists()
