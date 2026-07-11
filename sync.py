@@ -123,12 +123,12 @@ def main(argv=None) -> int:
             exit_code = 1
             continue
 
-        if stats.created > 0:
+        if stats.created > 0 or stats.deleted > 0:
             try:
                 downstream.git_commit_push(
                     cfg.digital_brain_path,
                     source.subdir,
-                    f"chore: sync {stats.created} {source.name} nuevos",
+                    f"chore: sync {source.name} (+{stats.created}/-{stats.deleted})",
                     push=cfg.git_push,
                 )
                 stats.git_ok = True

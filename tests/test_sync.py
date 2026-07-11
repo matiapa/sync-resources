@@ -76,3 +76,47 @@ def test_source_fetch_failure_does_not_prevent_other_sources(tmp_path, monkeypat
     assert (tmp_path / "ok" / "b.md").exists()
     # El exit code refleja el fallo de la fuente Broken.
     assert exit_code == 1
+
+
+def test_deletion_only_run_triggers_git_commit(tmp_path, monkeypatch):
+    """Si la única novedad de la corrida es un borrado (sin notas nuevas),
+    igual debe dispararse el commit+push al digital brain."""
+    from dataclasses import dataclass, field
+
+    from sources.base import RenderedNote
+
+    @dataclass
+    class FakeSource:
+        name: str
+        subdir: str
+        items: list = field(default_factory=list)
+
+        def fetch(self):
+            return self.items
+
+        def stem(self, item):
+            return item
+
+        def render(self, item):
+            return RenderedNote(f"---\nsource: {self.name}\n---\n\n# {item}\n", 0)
+
+    src = FakeSource(name="Ok", subdir="ok", items=[])
+    res_dir = tmp_path / "ok"
+    res_dir.mkdir()
+    (res_dir / "stale.md").write_text("---\nsource: Ok\n---\n\nviejo\n", encoding="utf-8")
+
+    commits = []
+    monkeypatch.setattr("sync.build_sources", lambda cfg, client: [src])
+    monkeypatch.setattr("sync.load_config", lambda: _cfg().__class__(
+        **{**_cfg().__dict__, "digital_brain_path": tmp_path,
+           "log_path": tmp_path / "sync.log", "git_push": False, "gbrain_sync": False}
+    ))
+    monkeypatch.setattr("sync.OpenAI", lambda api_key: None)
+    monkeypatch.setattr("sync.load_dotenv", lambda: None)
+    monkeypatch.setattr("downstream.git_commit_push", lambda *a, **k: commits.append(a))
+
+    exit_code = main([])
+
+    assert not (res_dir / "stale.md").exists()
+    assert len(commits) == 1
+    assert exit_code == 0
